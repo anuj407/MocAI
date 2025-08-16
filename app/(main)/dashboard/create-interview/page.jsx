@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import FormContainer from "./_components/FormContainer";
 import QuestionList from "./_components/QuestionList";
+import InterviewLink from "./_components/InterviewLink";
 
 function CreateInterview() {
   const router = useRouter();
@@ -17,7 +18,7 @@ function CreateInterview() {
   });
 
   // Update step and progress
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(3);
   const progressMap = { 1: 33, 2: 66, 3: 100 };
 
   
@@ -41,6 +42,13 @@ function CreateInterview() {
     if (validateForm()) {
       setStep((prev) => Math.min(prev + 1, 3));
     }
+  };
+
+  // Create Interview Link
+  const [interview_id, setInterviewId] = useState("");
+  const CreateInterviewLink = (interview_id) => {
+    setInterviewId(interview_id);
+    setStep((prev) => Math.min(prev + 1, 3));
   };
 
   return (
@@ -77,8 +85,12 @@ function CreateInterview() {
        {step === 2 ? 
          <QuestionList 
             formData={formData}
-            
+            CreateInterviewLink={CreateInterviewLink}
          /> : null
+       }
+       {
+         step === 3 &&
+         <InterviewLink formData={formData} interview_id={interview_id} />
        }
       </div>
     </div>
