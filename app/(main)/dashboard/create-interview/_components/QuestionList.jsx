@@ -1,14 +1,18 @@
 "use client";
+import { useUser } from "@/app/provider";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/services/supabaseClient";
 import axios from "axios";
 import { Loader2Icon } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
-function QuestionList({ formData }) {
+function QuestionList({ formData ,CreateInterviewLink}) {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const hasRequested = useRef(false); // ✅ New ref to prevent duplicate requests
-
+  const { user } = useUser();
   const generateQuestions = async () => {
     try {
       const result = await axios.post("/api/ai-model", {
@@ -38,12 +42,33 @@ function QuestionList({ formData }) {
       formData?.duration &&
       formData?.type &&
       !hasRequested.current &&
-      !questions
+      questions.length == 0
     ) {
+      console.log("Requesting AI for questions with data:");
+
       hasRequested.current = true;
       generateQuestions();
     }
   }, [formData]);
+console.log("Form Data:", formData);
+
+  // Handle finish action
+  const onFinish = async () => {
+    const interview_id = uuidv4();
+    const { data, error } = await supabase
+      .from("Interviews")
+      .insert([
+        {
+          ...formData, // spread formData fields inside the row
+          questionList: questions,
+          userEmail: user?.email,
+          interview_id: interview_id,
+        },
+      ])
+      .select();
+
+      CreateInterviewLink(interview_id);
+  };
 
   if (loading) {
     return (
@@ -80,13 +105,19 @@ function QuestionList({ formData }) {
           No questions generated. Try changing your inputs and regenerating.
         </p>
       ) : (
-        <ul className="list-disc pl-6 space-y-2 text-gray-800 dark:text-gray-100">
-          {questions.map((q, index) => (
-            <li key={index}>
-              <span className="font-medium">{q.type}:</span> {q.question}
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="list-disc pl-6 space-y-2 text-gray-800 dark:text-gray-100">
+            {questions.map((q, index) => (
+              <li key={index}>
+                <span className="font-medium">{q.type}:</span> {q.question}
+              </li>
+            ))}
+          </ul>
+          <Button onClick={onFinish}>
+            <Loader2Icon className="animate-spin w-4 h-4 mr-2" />
+            Create Invertview Link & Finish
+          </Button>
+        </>
       )}
     </div>
   );
