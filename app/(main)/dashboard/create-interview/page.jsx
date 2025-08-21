@@ -18,7 +18,7 @@ function CreateInterview() {
   });
 
   // Update step and progress
-  const [step, setStep] = useState(3);
+  const [step, setStep] = useState(1);
   const progressMap = { 1: 33, 2: 66, 3: 100 };
 
   
